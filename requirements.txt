@@ -1,0 +1,9 @@
+brightway2==2.4.2
+bw2io==0.8.8
+matplotlib==3.6.2
+networkx==2.7.1
+numpy==1.23.5
+openpyxl==3.0.9
+pandas==1.5.3
+pandas_stubs==1.2.0.35
+plotly==5.11.0
