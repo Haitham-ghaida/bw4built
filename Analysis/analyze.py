@@ -11,11 +11,10 @@ logging.basicConfig(format='%(asctime)s %(message)s',
 
 
 
-RECYCLING_LOSS = 0 # not used anymore
-REUSE_LOSS = 0.05 # not used anymore
-EOL_YEARS_REMAIN_CONST = 0.25
-REPLACEMENT_BUFFER_FACTOR = 0.9
-AMOUNT_MC_SIM = 100
+RECYCLING_LOSS = 0.05 # 5% loss in recycling
+EOL_YEARS_REMAIN_CONST = 0.25 # 25% of the product's life is left when it reaches EOL
+REPLACEMENT_BUFFER_FACTOR = 0.9 # 10% of the building's life is left when it is replaced
+AMOUNT_MC_SIM = 100 # number of MC simulations to run
 
 class Analysis:
     def reset():
@@ -581,53 +580,53 @@ class Analysis:
             product.impactsMC_c4_sen1_array = np.add(
                 impacts_landfillMC_arr, impacts_incinerationMC_arr)
             
-    def sen_d_standard_plus_reuse():
-        '''this will simulate the D benefits if no ruse occurs and all products are recycled or incinerated or landfilled at the end of life'''
-        '''
-        This section assumes that products that have enough tl and can be detached will be reused. But with no modification of the
-        result i.e. no multiplication with the rpc. Its stored in product.d_standard_plus_reuse'''
-        # STANDARD + REUSE
-        for product in Products.instances:
-            # Create copies of the arrays
-            temp_d1 = copy.deepcopy(product.impacts_d1)
-            temp_d1MC = copy.deepcopy(product.impactsMC_d1)
-            temp_d2d3 = copy.deepcopy(product.impacts_d_standard)
-            temp_d2d3MC = copy.deepcopy(product.impactsMC_d_standard)
-            temp_c4 = copy.deepcopy(product.impacts_c4_sen1)
-            temp_c4MC = copy.deepcopy(product.impactsMC_c4_sen1)
+    # def sen_d_standard_plus_reuse():
+    #     '''this will simulate the D benefits if no ruse occurs and all products are recycled or incinerated or landfilled at the end of life'''
+    #     '''
+    #     This section assumes that products that have enough tl and can be detached will be reused. But with no modification of the
+    #     result i.e. no multiplication with the rpc. Its stored in product.d_standard_plus_reuse'''
+    #     # STANDARD + REUSE
+    #     for product in Products.instances:
+    #         # Create copies of the arrays
+    #         temp_d1 = copy.deepcopy(product.impacts_d1)
+    #         temp_d1MC = copy.deepcopy(product.impactsMC_d1)
+    #         temp_d2d3 = copy.deepcopy(product.impacts_d_standard)
+    #         temp_d2d3MC = copy.deepcopy(product.impactsMC_d_standard)
+    #         temp_c4 = copy.deepcopy(product.impacts_c4_sen1)
+    #         temp_c4MC = copy.deepcopy(product.impactsMC_c4_sen1)
 
-            # Multiply the arrays with the reuse loss
-            temp_d1MC = np.multiply(temp_d1MC, (1-REUSE_LOSS))
-            temp_d1 = np.multiply(temp_d1, (1-REUSE_LOSS))
-            temp_c4 = np.multiply(temp_c4, REUSE_LOSS)
-            temp_c4MC = np.multiply(temp_c4MC, REUSE_LOSS)
-            temp_d2d3 = np.multiply(temp_d2d3, REUSE_LOSS)
-            temp_d2d3MC = np.multiply(temp_d2d3MC, REUSE_LOSS)
+    #         # Multiply the arrays with the reuse loss
+    #         temp_d1MC = np.multiply(temp_d1MC, (1-REUSE_LOSS))
+    #         temp_d1 = np.multiply(temp_d1, (1-REUSE_LOSS))
+    #         temp_c4 = np.multiply(temp_c4, REUSE_LOSS)
+    #         temp_c4MC = np.multiply(temp_c4MC, REUSE_LOSS)
+    #         temp_d2d3 = np.multiply(temp_d2d3, REUSE_LOSS)
+    #         temp_d2d3MC = np.multiply(temp_d2d3MC, REUSE_LOSS)
 
 
-            # Add the arrays together
-            temp_d1 = np.add(temp_d1, temp_d2d3)
-            temp_d1MC = np.add(temp_d1MC, temp_d2d3MC)
+    #         # Add the arrays together
+    #         temp_d1 = np.add(temp_d1, temp_d2d3)
+    #         temp_d1MC = np.add(temp_d1MC, temp_d2d3MC)
 
-            # if the conditions the product can be detached and it has enough tl for another cycle then it will be reused
-            if product.can_be_detached and yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
-                product.impacts_d_standard_reuse = temp_d1
-                product.impactsMC_d_standard_reuse = temp_d1MC
-                product.impacts_c4_sen2 = temp_c4
-                product.impactsMC_c4_sen2 = temp_c4MC
-                product.route = "reuse"
-            else:
-                product.impacts_d_standard_reuse = product.impacts_d_standard
-                product.impactsMC_d_standard_reuse = product.impactsMC_d_standard
-                product.impacts_c4_sen2 = product.impacts_c4_sen1
-                product.impactsMC_c4_sen2 = product.impactsMC_c4_sen1
-                # add reasons for route
-                if not product.can_be_detached and not yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
-                    product.route = "downcycle_no_detaching_no_years_remain"
-                elif not product.can_be_detached:
-                    product.route = "downcycle_no_detaching"
-                elif not yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
-                    product.route = "downcycle_no_years_remain"
+    #         # if the conditions the product can be detached and it has enough tl for another cycle then it will be reused
+    #         if product.can_be_detached and yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
+    #             product.impacts_d_standard_reuse = temp_d1
+    #             product.impactsMC_d_standard_reuse = temp_d1MC
+    #             product.impacts_c4_sen2 = temp_c4
+    #             product.impactsMC_c4_sen2 = temp_c4MC
+    #             product.route = "reuse"
+    #         else:
+    #             product.impacts_d_standard_reuse = product.impacts_d_standard
+    #             product.impactsMC_d_standard_reuse = product.impactsMC_d_standard
+    #             product.impacts_c4_sen2 = product.impacts_c4_sen1
+    #             product.impactsMC_c4_sen2 = product.impactsMC_c4_sen1
+    #             # add reasons for route
+    #             if not product.can_be_detached and not yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
+    #                 product.route = "downcycle_no_detaching_no_years_remain"
+    #             elif not product.can_be_detached:
+    #                 product.route = "downcycle_no_detaching"
+    #             elif not yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
+    #                 product.route = "downcycle_no_years_remain"
 
     def sen_d_standard_plus_reuse_plus_rpc():
         ''' This section is the same as the one above but with the rpc multiplication. Its stored in product.d_rpc'''
@@ -693,6 +692,7 @@ class Analysis:
                 product.impactsMC_d_rpc_array = temp_d1MC_array
                 product.impacts_c4_sen3_array = temp_c4_not_reused_array
                 product.impactsMC_c4_sen3_array = temp_c4MC_not_reused_array
+                product.route = "reuse"
             else:
                 product.impacts_d_rpc = product.impacts_d_standard
                 product.impactsMC_d_rpc = product.impactsMC_d_standard
@@ -702,6 +702,13 @@ class Analysis:
                 product.impactsMC_c4_sen3 = product.impactsMC_c4_sen1
                 product.impacts_c4_sen3_array = product.impacts_c4_sen1_array
                 product.impactsMC_c4_sen3_array = product.impactsMC_c4_sen1_array
+                # add reasons for route
+                if not product.can_be_detached and not yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
+                    product.route = "downcycle_no_detaching_no_years_remain"
+                elif not product.can_be_detached:
+                    product.route = "downcycle_no_detaching"
+                elif not yearsRemain(product, product.assembly.building.life, True) >= EOL_YEARS_REMAIN_CONST * product.assembly.building.life:
+                    product.route = "downcycle_no_years_remain"
 
     def export_result_to_product_objs():
         for product in Products.instances:
