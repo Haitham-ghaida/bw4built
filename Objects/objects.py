@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from typing import Any, Union
 import brightway2 as bw
 import logging
 import sys
@@ -8,7 +7,6 @@ import networkx as nx
 from ..utils.helper import networkx_path_list, mc_por
 import random
 import os
-from itertools import groupby
 
 RECYCLING_LOSS = 0 # not used anymore
 REUSE_LOSS = 0.05 # not used anymore
@@ -941,7 +939,6 @@ class LCAh:
         self.mainDatabase = bw.Database("ecoi_3.8_cutoff")
         self.sortingDatabase = bw.Database("sorting_eol_sen")
         self.transporta4Database = bw.Database("transport_a4_sen")
-        self.transportc2Database = bw.Database("transport_eol_sen")
         self.recyclingDatabase = bw.Database("impacts_recycling")
 
         self.__class__.instances.append(self)

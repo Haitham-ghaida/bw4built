@@ -1,5 +1,5 @@
 from ..Objects.objects import Products, Assemblies, Building, Relations, LCAh
-from ..utils.helper import yearsRemain, randomChoiceArray, mc_por, mc_por_impact
+from ..utils.helper import yearsRemain, randomChoiceArray, mc_por_impact
 import logging
 import numpy as np
 import copy
