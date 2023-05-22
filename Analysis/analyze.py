@@ -36,7 +36,7 @@ class Analysis:
 
     @classmethod
     def setup_analysis(cls, filename, update_connection: bool = True, reset_objects: bool = False,
-                       export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, default_rel: float = 1):
+                       export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, default_rel: float = 1, mf_mcs: int = 100):
         if reset_objects:
             Analysis.reset()
             Analysis.generate_objects(
@@ -62,7 +62,7 @@ class Analysis:
         Products.detachment_analysis()
         Products.generate_rpc()
         Products.update_years_of_replacements_based_on_detachability()
-        Products.material_flow_and_replacements()
+        Products.material_flow_and_replacements(mf_mcs=mf_mcs)
         Assemblies.generate_rpc()
         Building.generate_rpc()
 
@@ -105,7 +105,7 @@ class Analysis:
                 impactsMC_a4, product.total_starting_amount)
         print("a1a3 and a4 added!")
 
-    def add_b4(use_updated=False, mc_pick: int = 50):
+    def add_b4(use_updated=False, mc_pick: int = 50, mf_mcs: int = 100):
         '''this will generate the b4 impacts for each product'''
 
         for product in Products.instances:
@@ -119,9 +119,9 @@ class Analysis:
                     (1, len(LCAh.instances[0].get_list_of_methods), mc_pick))
                 # set the impacts_b4_array and impactsMC_b4_array to zeros taking into account the const MC_sim number
                 product.impacts_b4_array = np.zeros(
-                    (AMOUNT_MC_SIM, len(LCAh.instances[0].get_list_of_methods)))
+                    (mf_mcs, len(LCAh.instances[0].get_list_of_methods)))
                 product.impactsMC_b4_array = np.zeros(
-                    (AMOUNT_MC_SIM, len(LCAh.instances[0].get_list_of_methods),mc_pick)
+                    (mf_mcs, len(LCAh.instances[0].get_list_of_methods),mc_pick)
 )
                 continue
                 # use the updated replacement years if use_updated is true
@@ -464,15 +464,15 @@ class Analysis:
                 np.multiply(impactsMC_d3_elec, amount_array.reshape(-1,1,1) * -1 * 0.1*product.lhv), np.multiply(impactsMC_d3_heat, amount_array.reshape(-1,1,1) * -1 * 0.2*product.lhv))
         print("D3 added!")
 
-    def product_lca(include_circularity: bool = True):
-        Analysis.add_a1a3_a4()
-        Analysis.add_b4(use_updated=include_circularity)
-        Analysis.add_c2(use_updated=include_circularity)
-        Analysis.add_c3(use_updated=include_circularity)
-        Analysis.add_c4(use_updated=include_circularity)
+    def product_lca(include_circularity: bool = True, mc_simulations: int = 50, mf_mcs: int = 100):
+        Analysis.add_a1a3_a4(mc_pick=mc_simulations)
+        Analysis.add_b4(use_updated=include_circularity, mc_pick=mc_simulations, mf_mcs=mf_mcs)
+        Analysis.add_c2(use_updated=include_circularity, mc_pick=mc_simulations)
+        Analysis.add_c3(use_updated=include_circularity, mc_pick=mc_simulations)
+        Analysis.add_c4(use_updated=include_circularity, mc_pick=mc_simulations)
         Analysis.add_d1(use_updated=include_circularity)
-        Analysis.add_d2(use_updated=include_circularity)
-        Analysis.add_d3(use_updated=include_circularity)
+        Analysis.add_d2(use_updated=include_circularity, mc_pick=mc_simulations)
+        Analysis.add_d3(use_updated=include_circularity, mc_pick=mc_simulations)
 
     def sen_d_standard():
         '''this will simulate the D benefits assuming all products are recycled or incinerated or landfilled at the end of life'''
@@ -580,7 +580,7 @@ class Analysis:
             product.impactsMC_c4_sen1_array = np.add(
                 impacts_landfillMC_arr, impacts_incinerationMC_arr)
             
-    def sen_d_standard_plus_reuse_plus_rpc():
+    def sen_d_standard_plus_reuse_plus_rpc(mfa_mcs: int = 100):
         ''' This section is the same as the one above but with the rpc multiplication. Its stored in product.d_rpc'''
         # STANDARD + REUSE + RPC
         for product in Products.instances:
@@ -608,19 +608,19 @@ class Analysis:
             temp_c4_not_reused = np.multiply(temp_c4, portion_not_reused)
             temp_c4MC_not_reused = np.multiply(temp_c4MC, portion_not_reused)
             # multiply the impacts with the reuse losses
-            deter_temp_d1 = np.multiply(temp_d1, np.median(mc_por_impact(product)))
+            deter_temp_d1 = np.multiply(temp_d1, np.median(mc_por_impact(product, mfa_mcs)))
             # add the recycling benefits of the losses
             deter_temp_d1 = np.add(deter_temp_d1, temp_d2d3_reuse)
             # multiply the impacts with the reuse losses
-            deter_temp_d1MC = np.multiply(temp_d1MC, np.median(mc_por_impact(product)))
+            deter_temp_d1MC = np.multiply(temp_d1MC, np.median(mc_por_impact(product, mfa_mcs)))
             # add the recycling benefits of the losses
             deter_temp_d1MC = np.add(deter_temp_d1MC, temp_d2d3MC_reuse)
             # if product can be detached and has enough tl, reuse it
 
             # do the same but for the arrays
 
-            temp_d1_array = np.multiply(product.impacts_d1.reshape(1,-1), mc_por_impact(product).reshape(-1,1))
-            temp_d1MC_array = np.multiply(product.impactsMC_d1, mc_por_impact(product).reshape(-1,1,1))
+            temp_d1_array = np.multiply(product.impacts_d1.reshape(1,-1), mc_por_impact(product, mfa_mcs).reshape(-1,1))
+            temp_d1MC_array = np.multiply(product.impactsMC_d1, mc_por_impact(product, mfa_mcs).reshape(-1,1,1))
 
             # make sure no zero division
             portion_not_reused_array = np.divide(product.replaced_amount_updated_array, product.total_amount_with_replacements_array_updated)
@@ -800,6 +800,32 @@ class Analysis:
         print("Exported results to assembly objects")
 
     def export_result_to_building_objs(building: Building):
+        # set all values to zero
+        building.impacts_a1a3 = None
+        building.impactsMC_a1a3 = None
+        building.impacts_a4 = None
+        building.impactsMC_a4 = None
+        building.impacts_b4 = None
+        building.impactsMC_b4 = None
+        building.impacts_c2 = None
+        building.impactsMC_c2 = None
+        building.impacts_c3 = None
+        building.impactsMC_c3 = None
+        building.impacts_c4_sen1 = None
+        building.impactsMC_c4_sen1 = None
+        building.impacts_c4_sen3 = None
+        building.impactsMC_c4_sen3 = None
+        building.impacts_d_standard = None
+        building.impactsMC_d_standard = None
+        building.impacts_d_rpc = None
+        building.impactsMC_d_rpc = None
+        building.total_impact_without_d = None
+        building.total_impactMC_without_d = None
+        building.total_impact_with_d_standard = None
+        building.total_impactMC_with_d_standard = None
+        building.total_impact_with_d_rpc = None
+        building.total_impactMC_with_d_rpc = None
+        # sum up all impacts
         building.impacts_a1a3 = np.sum(
             [assembly.impacts_a1a3 for assembly in building.assemblies], axis=0)
         building.impactsMC_a1a3 = np.sum(
@@ -893,10 +919,9 @@ class Analysis:
 
         print("Exported results to building objects")
 
-    def generate_scenarios():
+    def generate_scenarios(mfa_mcs: int = 100):
         Analysis.sen_d_standard()
-        Analysis.sen_d_standard_plus_reuse()
-        Analysis.sen_d_standard_plus_reuse_plus_rpc()
+        Analysis.sen_d_standard_plus_reuse_plus_rpc(mfa_mcs)
 
     def generate_results(building: Building, assembly_results: bool = True, building_results: bool = True):
         Analysis.export_result_to_product_objs()

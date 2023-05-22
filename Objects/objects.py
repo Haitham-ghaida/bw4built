@@ -12,10 +12,10 @@ RECYCLING_LOSS = 0 # not used anymore
 REUSE_LOSS = 0.05 # not used anymore
 EOL_YEARS_REMAIN_CONST = 0.25
 REPLACEMENT_BUFFER_FACTOR = 0.9
-AMOUNT_MC_SIM = 100
 
-CURRENT_DIR = str(os.getcwd())
-
+CURRENT_DIR = os.path.dirname(__file__)
+PARENT_DIR = os.path.dirname(CURRENT_DIR)
+print(PARENT_DIR)
 
 logging.basicConfig(format='%(asctime)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p',
@@ -491,7 +491,7 @@ class Products(object):
         print("relations connected with products!")
 
     @classmethod
-    def material_flow_and_replacements(cls):
+    def material_flow_and_replacements(cls, mf_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
         '''this will generate the replaced amount for each product after the upstreams are considered in terms of if they can be detached or not so if not then the total amount will be added
         if it can be detached then it will add to the (reuse years) which is what we use here to calculate the material flow'''
         for product in cls.instances:
@@ -513,7 +513,7 @@ class Products(object):
                 product.replaced_amount_updated = product.replaced_amount_updated + product.total_starting_amount
             for year in sorted(product.disassembly_years): # replacements from disassembly cycles
                 if year not in product.material_flow_updated:
-                    amount_added_on_reuse_array = mc_por(product) # previously reuse_prob_array = mc_por(product)
+                    amount_added_on_reuse_array = mc_por(product, mf_mcs, constants) # previously reuse_prob_array = mc_por(product)
                     one_reuse_product_amount_array = amount_added_on_reuse_array * product.total_starting_amount
                     one_reuse_product_median_amount = np.median(one_reuse_product_amount_array)
                     material_flow = {f"{year}": one_reuse_product_median_amount}
@@ -524,7 +524,7 @@ class Products(object):
             product.replaced_amount_updated_array = product.replaced_amount_updated + product.total_reuse_product_amount_array
             # if the above results in a float or int instead of an array then convert it to an array of the same value repeated to the mc sim number
             if isinstance(product.replaced_amount_updated_array, float) or isinstance(product.replaced_amount_updated_array, int):
-                product.replaced_amount_updated_array = np.full(AMOUNT_MC_SIM, product.replaced_amount_updated_array)
+                product.replaced_amount_updated_array = np.full(mf_mcs, product.replaced_amount_updated_array)
             product.replaced_amount_updated = product.replaced_amount_updated + product.median_amount_added_after_dis_cycles
             product.total_amount_with_replacements = product.replaced_amount + product.total_starting_amount # just add the first one plus the replaced amount
             product.total_amount_with_replacements_updated = product.total_starting_amount +  product.replaced_amount_updated
@@ -537,7 +537,8 @@ class Products(object):
         '''this will add all the eol information to the products'''
         # read the eol information from the excel file
         # print cwd
-        df_eol = pd.read_excel(f"{CURRENT_DIR}/brwy4build/sen/sen-eol.xlsx")
+        df_eol = pd.read_excel(f"{PARENT_DIR}/sen/sen-eol.xlsx")
+        # df_eol = pd.read_excel(f"..sen/sen-eol.xlsx")
         # add the eol information to the products
         for product in cls.instances:
             try:
@@ -947,6 +948,14 @@ class LCAh:
     @property 
     def get_list_of_methods(self):
         return [method for method in bw.methods if str(self.method) in str(method)]
+    
+    @property
+    def get_list_of_activities(self):
+        return [act for act in self.mainDatabase]
+    
+    @property
+    def get_list_of_units(self):
+        return []
 
     def get_activity(self):
         not_found_code = []

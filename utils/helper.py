@@ -2,6 +2,8 @@ import networkx as nx
 import numpy as np
 from copy import deepcopy
 import random
+import os
+from collections import OrderedDict
 
 
 def remove_duplicates(my_list):
@@ -57,9 +59,9 @@ def sigmoid(x, a=1.0690464139392881, b=0.5333961150019655, c=-7.57209212334568, 
     return y
 
 
-def mc_por(product, num_simulations=100):
+def mc_por(product, num_simulations=100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
     results = []
-    sigmoid_prob = 1 - sigmoid(product.rpc)
+    sigmoid_prob = 1 - sigmoid(product.rpc, *constants)
     for _ in range(num_simulations):
         rand_num = random.random()
         if rand_num < sigmoid_prob:
@@ -70,9 +72,9 @@ def mc_por(product, num_simulations=100):
     return np.array(results)
 
 
-def mc_por_impact(product, num_simulations=100):
+def mc_por_impact(product, num_simulations=100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
     results = []
-    sigmoid_prob = 1 - sigmoid(product.rpc)
+    sigmoid_prob = 1 - sigmoid(product.rpc, *constants)
     for _ in range(num_simulations):
         rand_num = random.random()
         if rand_num < sigmoid_prob:
@@ -81,3 +83,26 @@ def mc_por_impact(product, num_simulations=100):
             results.append(0)  # Not reused
             
     return np.array(results)
+
+def save_attributes_to_numpy(obj, attr_names, scenario_name, path_to_save_folder):
+    for attr_name in attr_names:
+        if hasattr(obj, attr_name):
+            attr = getattr(obj, attr_name)
+            if isinstance(attr, np.ndarray):
+                np.save(os.path.join(path_to_save_folder, f'{scenario_name}_{attr_name}.npy'), attr)
+                print(f'Saved {attr_name} as {scenario_name}_{attr_name}.npy')
+            else:
+                print(f'The attribute {attr_name} is not a numpy array')
+        else:
+            print(f'The object does not have an attribute named {attr_name}')
+
+
+
+def load_all_arrays(path_to_folder):
+    arrays = {}
+    for filename in os.listdir(path_to_folder):
+        if filename.endswith('.npy'):
+            # Remove the .npy extension to get the array name
+            array_name = filename[:-4]
+            arrays[array_name] = np.load(os.path.join(path_to_folder, filename))
+    return OrderedDict(sorted(arrays.items()))
