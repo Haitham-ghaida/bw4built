@@ -4,7 +4,7 @@ from copy import deepcopy
 import random
 import os
 from collections import OrderedDict
-
+from scipy.stats import lognorm
 
 def remove_duplicates(my_list):
     no_duplicates = set()
@@ -45,15 +45,6 @@ def randomChoiceArray(array: np.array, pick:int = 50):
     choice = copied[:, :, np.random.choice(copied.shape[2], pick, replace=False)]
     return choice
 
-
-
-'''[ 1.09186399  0.44315069  7.58473472 -0.07522362]
-[ 1.00000000e+00  8.07452500e-01  1.86017358e+02 -2.62179169e-12]
-[ 1.00000049e+00  3.54228982e-01  5.72162691e+01 -4.81510058e-07]
-[90.9335388  11.56324294  0.27240267 -3.82067998]
-[ 1.00151956e+00  7.27966159e-01  2.39443872e+01 -3.65332847e-05]
-[ 1.23640816  0.59668638  5.12167984 -0.07709897]'''
-
 def sigmoid(x, a=1.0690464139392881, b=0.5333961150019655, c=-7.57209212334568, d=-0.030342853955192227):
     y = a / (1 + np.exp(-c*(x-b))) + d
     return y
@@ -78,31 +69,10 @@ def mc_por_impact(product, num_simulations=100, constants: tuple = (1.0690464139
     for _ in range(num_simulations):
         rand_num = random.random()
         if rand_num < sigmoid_prob:
-            results.append(1)  # Reused
+            results.append(0)  # Reused
         else:
-            results.append(0)  # Not reused
+            results.append(1)  # Not reused
             
     return np.array(results)
 
-def save_attributes_to_numpy(obj, attr_names, scenario_name, path_to_save_folder):
-    for attr_name in attr_names:
-        if hasattr(obj, attr_name):
-            attr = getattr(obj, attr_name)
-            if isinstance(attr, np.ndarray):
-                np.save(os.path.join(path_to_save_folder, f'{scenario_name}_{attr_name}.npy'), attr)
-                print(f'Saved {attr_name} as {scenario_name}_{attr_name}.npy')
-            else:
-                print(f'The attribute {attr_name} is not a numpy array')
-        else:
-            print(f'The object does not have an attribute named {attr_name}')
 
-
-
-def load_all_arrays(path_to_folder):
-    arrays = {}
-    for filename in os.listdir(path_to_folder):
-        if filename.endswith('.npy'):
-            # Remove the .npy extension to get the array name
-            array_name = filename[:-4]
-            arrays[array_name] = np.load(os.path.join(path_to_folder, filename))
-    return OrderedDict(sorted(arrays.items()))

@@ -1,6 +1,6 @@
 from brwy4build.Objects.objects import Products, Assemblies, Relations, LCAh, Building
 from brwy4build.Analysis.analyze import Analysis
-from ..utils.helper import save_attributes_to_numpy
+from ..utils.processing import save_attributes_to_numpy
 import warnings
 import pickle
 import os
@@ -145,6 +145,6 @@ def initialize(projectname: str = "default", data_file_path: str = "default", pr
         if save:
             save_project(projectname=projectname, save_folder=path_to_save_folder)
         if save_attribute:
-            save_attributes_to_numpy(obj=Building.instances[0],attr_names=save_attribute[0],scenario_name=save_attribute[1],
-                                    path_to_save_folder=save_attribute[2])
+            save_attributes_to_numpy(obj=Building.instances[0],attr_names=save_attribute[0],scenario_name=save_attribute[1], constant_sen=save_attribute[2],
+                                    path_to_save_folder=save_attribute[3])
         

@@ -36,7 +36,7 @@ class Analysis:
 
     @classmethod
     def setup_analysis(cls, filename, update_connection: bool = True, reset_objects: bool = False,
-                       export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, default_rel: float = 1, mf_mcs: int = 100):
+                       export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, default_rel: float = 1, mf_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
         if reset_objects:
             Analysis.reset()
             Analysis.generate_objects(
@@ -62,7 +62,7 @@ class Analysis:
         Products.detachment_analysis()
         Products.generate_rpc()
         Products.update_years_of_replacements_based_on_detachability()
-        Products.material_flow_and_replacements(mf_mcs=mf_mcs)
+        Products.material_flow_and_replacements(mf_mcs=mf_mcs, constants=constants)
         Assemblies.generate_rpc()
         Building.generate_rpc()
 
@@ -580,7 +580,7 @@ class Analysis:
             product.impactsMC_c4_sen1_array = np.add(
                 impacts_landfillMC_arr, impacts_incinerationMC_arr)
             
-    def sen_d_standard_plus_reuse_plus_rpc(mfa_mcs: int = 100):
+    def sen_d_standard_plus_reuse_plus_rpc(mfa_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
         ''' This section is the same as the one above but with the rpc multiplication. Its stored in product.d_rpc'''
         # STANDARD + REUSE + RPC
         for product in Products.instances:
@@ -608,19 +608,19 @@ class Analysis:
             temp_c4_not_reused = np.multiply(temp_c4, portion_not_reused)
             temp_c4MC_not_reused = np.multiply(temp_c4MC, portion_not_reused)
             # multiply the impacts with the reuse losses
-            deter_temp_d1 = np.multiply(temp_d1, np.median(mc_por_impact(product, mfa_mcs)))
+            deter_temp_d1 = np.multiply(temp_d1, np.median(mc_por_impact(product, mfa_mcs, constants)))
             # add the recycling benefits of the losses
             deter_temp_d1 = np.add(deter_temp_d1, temp_d2d3_reuse)
             # multiply the impacts with the reuse losses
-            deter_temp_d1MC = np.multiply(temp_d1MC, np.median(mc_por_impact(product, mfa_mcs)))
+            deter_temp_d1MC = np.multiply(temp_d1MC, np.median(mc_por_impact(product, mfa_mcs, constants)))
             # add the recycling benefits of the losses
             deter_temp_d1MC = np.add(deter_temp_d1MC, temp_d2d3MC_reuse)
             # if product can be detached and has enough tl, reuse it
 
             # do the same but for the arrays
 
-            temp_d1_array = np.multiply(product.impacts_d1.reshape(1,-1), mc_por_impact(product, mfa_mcs).reshape(-1,1))
-            temp_d1MC_array = np.multiply(product.impactsMC_d1, mc_por_impact(product, mfa_mcs).reshape(-1,1,1))
+            temp_d1_array = np.multiply(product.impacts_d1.reshape(1,-1), mc_por_impact(product, mfa_mcs, constants).reshape(-1,1))
+            temp_d1MC_array = np.multiply(product.impactsMC_d1, mc_por_impact(product, mfa_mcs, constants).reshape(-1,1,1))
 
             # make sure no zero division
             portion_not_reused_array = np.divide(product.replaced_amount_updated_array, product.total_amount_with_replacements_array_updated)
@@ -919,9 +919,9 @@ class Analysis:
 
         print("Exported results to building objects")
 
-    def generate_scenarios(mfa_mcs: int = 100):
+    def generate_scenarios(mfa_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
         Analysis.sen_d_standard()
-        Analysis.sen_d_standard_plus_reuse_plus_rpc(mfa_mcs)
+        Analysis.sen_d_standard_plus_reuse_plus_rpc(mfa_mcs, constants)
 
     def generate_results(building: Building, assembly_results: bool = True, building_results: bool = True):
         Analysis.export_result_to_product_objs()
