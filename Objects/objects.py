@@ -266,8 +266,12 @@ class Products(object):
         if len(Assemblies.instances) == 0:
             raise Exception("you need to generate the assemblies first")
         for product in cls.instances:
-            product.assembly = [
-                assembly for assembly in Assemblies.instances if product.part_of_assembly == assembly.id][0]
+            try:
+                product.assembly = [
+                    assembly for assembly in Assemblies.instances if product.part_of_assembly == assembly.id][0]
+            except IndexError:
+                raise IndexError(
+                    f"the assembly {product.part_of_assembly} does not exist for the product {product.id}")
             if not hasattr(product, "assembly"):
                 raise Exception(
                     f"the assembly {product.part_of_assembly} does not exist for the product {product.id}")

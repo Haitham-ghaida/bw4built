@@ -20,8 +20,12 @@ def save_attributes_to_numpy(obj, attr_names, scenario_name, constant_sen: str =
                 scenario_name = "RW"
             if scenario_name == "high_assembly":
                 scenario_name = "HD"
+            if scenario_name == "highest_assembly":
+                scenario_name = "HHD"
             if scenario_name == "low_assembly":
                 scenario_name = "LD"
+            if scenario_name == "lowest_assembly":
+                scenario_name = "LLD"
             if attr_name == "total_impactMC_with_d_rpc_array":
                 print_name = "ISD"
             if attr_name == "total_impactMC_without_d_array":
