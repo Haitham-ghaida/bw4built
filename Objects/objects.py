@@ -491,7 +491,7 @@ class Products(object):
         print("relations connected with products!")
 
     @classmethod
-    def material_flow_and_replacements(cls, mf_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
+    def material_flow_and_replacements(cls, mf_mcs: int = 100, constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362)):
         '''this will generate the replaced amount for each product after the upstreams are considered in terms of if they can be detached or not so if not then the total amount will be added
         if it can be detached then it will add to the (reuse years) which is what we use here to calculate the material flow'''
         for product in cls.instances:
@@ -919,12 +919,53 @@ class Relations(object):
                     relation.fc = random.choice(fc)
         cls.relations_add_is_connection(filename)
 
+    def mc_for_assemblies(assemblies: list[str], mode: str):
+        ca = [0.1, 0.4, 0.8, 1]
+        ct = [0.1, 0.2, 0.6, 0.8, 1]
+        cr = [0.1, 0.4, 1]
+        fc = [0.1, 0.2, 0.8, 1]
+        # find assemblies in Assemblies.instances by matching id
+        my_assemblies = [assembly for assembly in Assemblies.instances if assembly.id in assemblies]
+        for assembly in my_assemblies:
+            my_products = [product for product in Products.instances if product.assembly.id == assembly.id]
+            for product in my_products:
+                my_rel = [relation for relation in Relations.instances if relation.product1object.id == product.id or relation.product2object.id == product.id]
+                for relation in my_rel:
+                    # if relation is not connection skip
+                    if relation.is_connection is False:
+                        continue
+                    elif mode == "lowest_assembly":
+                        relation.ct = 0.1
+                        relation.ca = 0.1
+                        relation.cr = 0.1
+                        relation.fc = 0.1
+                    elif mode == "highest_assembly":
+                        relation.ct = 1
+                        relation.ca = 1
+                        relation.cr = 1
+                        relation.fc = 1
+                    elif mode == "low_assembly":
+                        relation.ct = random.choice(ct[:2])
+                        relation.ca = random.choice(ca[:2])
+                        relation.cr = random.choice(cr[:2])
+                        relation.fc = random.choice(fc[:2])
+                    elif mode == "high_assembly":
+                        relation.ct = random.choice(ct[3:])
+                        relation.ca = random.choice(ca[3:])
+                        relation.cr = random.choice(cr[2:])
+                        relation.fc = random.choice(fc[3:])
+                    elif mode == "rng_assembly":
+                        relation.ct = random.choice(ct)
+                        relation.ca = random.choice(ca)
+                        relation.cr = random.choice(cr)
+                        relation.fc = random.choice(fc)
+
     @classmethod
     def relations_add_is_connection(cls, filename: str = "default"):
         df = pd.read_excel(filename, "Relations", engine="openpyxl")
         for relation in cls.instances:
-            relation.is_connection = df.loc[df["Relation_id_as_tuple"] == str(
-                relation.t)]["Is_connection"].values[0]
+            relation.is_connection = bool(df.loc[df["Relation_id_as_tuple"] == str(
+                relation.t)]["Is_connection"].values[0])
 
 
 class LCAh:

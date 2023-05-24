@@ -1,0 +1,30 @@
+from brwy4build.run.main import initialize
+from brwy4build.Objects.objects import *
+from brwy4build.Analysis.analyze import Analysis
+import pickle
+import gc
+
+list_of_attributes = ["total_impactMC_with_d_rpc_array", "impactsMC_b4_array"]
+sens = ["high_assembly", "low_assembly"]
+
+# initialize(projectname="DSPS case studyv14", data_file_path="/home/haithamth/Documents/xlsx/paper1-sen1.xlsx", path_to_save_folder="/home/haithamth/Documents/My_saved_analysis"
+#            ,project_new=False, lca_new=False, mc_pick=80, MCiterations=1500, material_flow_mcs=80, mode="user input")
+
+# aggregate_to_type = Assemblies.group_by_brand()
+
+# aggregate_to_type_ids = {}
+# for k, v in aggregate_to_type.items():
+#     aggregate_to_type_ids[k] = [assembly.id for assembly in v]
+
+# with open('my_dict.pkl', 'wb') as f:
+#     pickle.dump(aggregate_to_type_ids, f)
+with open('my_dict.pkl', 'rb') as f:
+    aggregate_to_type_ids = pickle.load(f)
+
+for sen in sens:
+    for brand, assembly_ids in aggregate_to_type_ids.items():
+        initialize(projectname="DSPS case studyv14", data_file_path="/home/haithamth/Documents/xlsx/paper1-sen1.xlsx", path_to_save_folder="/home/haithamth/Documents/My_saved_analysis"
+           ,project_new=True, lca_new=False, mc_pick=80, MCiterations=1500, material_flow_mcs=80, mode="user input",
+           assembly_list=assembly_ids, mode_assembly=sen, save = False, save_attribute=(list_of_attributes, sen, brand, "/home/haithamth/Documents/Asse_sen3"))
+        Analysis.reset()
+        gc.collect()

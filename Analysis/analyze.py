@@ -30,13 +30,15 @@ class Analysis:
         Assemblies.generate(filename=filename)
         Building.generate(filename=filename)
         Products.generateRelationsClass(mode=default_rel)
-        # Relations.output_relations_dataframe_to_excel(df=Relations.relations_dataframe(),
-        #                                               filename=filename, write_output=False)
+
         print("objects generated")
 
     @classmethod
     def setup_analysis(cls, filename, update_connection: bool = True, reset_objects: bool = False,
-                       export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, default_rel: float = 1, mf_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
+                       export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, 
+                       default_rel: float = 1, mf_mcs: int = 100,
+                        constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227),
+                        assembly_list = None, mode_assembly = None):
         if reset_objects:
             Analysis.reset()
             Analysis.generate_objects(
@@ -51,10 +53,13 @@ class Analysis:
         if export_excel:
             Relations.output_relations_dataframe_to_excel(
                 df=Relations.relations_dataframe(), filename=filename, write_output=True)
-
+        if mode_assembly is not None:
+            Products.connect_products_to_relations()
+            Relations.mc_for_assemblies(assemblies=assembly_list, mode=mode_assembly)
+        if mode_assembly is None:
+            Products.connect_products_to_relations()
         Products.add_replacement_cycles()
         Products.add_total_amounts_to_product()
-        Products.connect_products_to_relations()
         Products.add_eol_info()
         Relations.composite_products()
         Relations.detachment_analysis()
@@ -580,7 +585,7 @@ class Analysis:
             product.impactsMC_c4_sen1_array = np.add(
                 impacts_landfillMC_arr, impacts_incinerationMC_arr)
             
-    def sen_d_standard_plus_reuse_plus_rpc(mfa_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
+    def sen_d_standard_plus_reuse_plus_rpc(mfa_mcs: int = 100, constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362)):
         ''' This section is the same as the one above but with the rpc multiplication. Its stored in product.d_rpc'''
         # STANDARD + REUSE + RPC
         for product in Products.instances:
@@ -919,7 +924,7 @@ class Analysis:
 
         print("Exported results to building objects")
 
-    def generate_scenarios(mfa_mcs: int = 100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
+    def generate_scenarios(mfa_mcs: int = 100, constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362)):
         Analysis.sen_d_standard()
         Analysis.sen_d_standard_plus_reuse_plus_rpc(mfa_mcs, constants)
 

@@ -18,13 +18,18 @@ def save_attributes_to_numpy(obj, attr_names, scenario_name, constant_sen: str =
                 scenario_name = "ND"
             if scenario_name == "user input":
                 scenario_name = "RW"
-
+            if scenario_name == "high_assembly":
+                scenario_name = "HD"
+            if scenario_name == "low_assembly":
+                scenario_name = "LD"
             if attr_name == "total_impactMC_with_d_rpc_array":
                 print_name = "ISD"
             if attr_name == "total_impactMC_without_d_array":
                 print_name = "INS"
             if attr_name == "total_impactMC_with_d_standard_array":
                 print_name = "ISS"
+            if attr_name == "impactsMC_b4_array":
+                print_name = "B4"
             attr = attr/120/60
             np.save(os.path.join(path_to_save_folder, f'{constant_sen}_{print_name}_{scenario_name}.npy'), attr)
             print(f'Saved {attr_name} as {scenario_name}_{print_name}.npy')
@@ -140,3 +145,16 @@ def plot_scenarios(scenarios, impact_category_index, save):
         plt.savefig('boxplot.png', dpi=1000)
     plt.show()
     # save fig with 1000 dpi
+
+
+    ############################################################################3
+def save_attributes_to_numpy_assembly_sen(obj, attr_names, scenario_name, constant_sen: str = None, path_to_save_folder:str = None):
+    for attr_name in attr_names:
+        attr = None
+        if hasattr(obj, attr_name):
+            attr = getattr(obj, attr_name)
+            attr = attr/120/60
+            np.save(os.path.join(path_to_save_folder, f'{constant_sen}_{print_name}_{scenario_name}.npy'), attr)
+            print(f'Saved {attr_name} as {scenario_name}_{print_name}.npy')
+        else:
+            print(f'The object does not have an attribute named {attr_name}')

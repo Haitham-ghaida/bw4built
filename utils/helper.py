@@ -45,12 +45,12 @@ def randomChoiceArray(array: np.array, pick:int = 50):
     choice = copied[:, :, np.random.choice(copied.shape[2], pick, replace=False)]
     return choice
 
-def sigmoid(x, a=1.0690464139392881, b=0.5333961150019655, c=-7.57209212334568, d=-0.030342853955192227):
+def sigmoid(x, a=1.09186399, b=0.44315069, c=7.58473472, d=-0.07522362):
     y = a / (1 + np.exp(-c*(x-b))) + d
     return y
 
 
-def mc_por(product, num_simulations=100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
+def mc_por(product, num_simulations=100, constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362)):
     results = []
     sigmoid_prob = 1 - sigmoid(product.rpc, *constants)
     for _ in range(num_simulations):
@@ -63,7 +63,7 @@ def mc_por(product, num_simulations=100, constants: tuple = (1.0690464139392881,
     return np.array(results)
 
 
-def mc_por_impact(product, num_simulations=100, constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227)):
+def mc_por_impact(product, num_simulations=100, constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362)):
     results = []
     sigmoid_prob = 1 - sigmoid(product.rpc, *constants)
     for _ in range(num_simulations):
