@@ -5,38 +5,99 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def save_attributes_to_numpy(obj, attr_names, scenario_name, constant_sen: str = None, path_to_save_folder:str = None):
+def save_attributes_to_numpy(obj, attr_names, scenario_name, constant_sen: str = None,  other=None, path_to_save_folder:str = None):
     for attr_name in attr_names:
         attr = None
         if hasattr(obj, attr_name):
             attr = getattr(obj, attr_name)
-            if scenario_name == "high_product":
-                scenario_name = "HD"
-            if scenario_name == "low_product":
-                scenario_name = "LD"
+            # if scenario_name == "high_product":
+            #     scenario_name = "HD"
+            # if scenario_name == "highest_product":
+            #     scenario_name = "HD"
+            # if scenario_name == "low_product":
+            #     scenario_name = "LD"
+            # if scenario_name == "keep":
+            #     scenario_name = "HD"
+            # if scenario_name == "user input":
+            #     scenario_name = "RW"
+            # if scenario_name == "lowest_product":
+            #     scenario_name = "LD"
+            # if scenario_name == "high_assembly":
+            #     scenario_name = "HD"
+            # if scenario_name == "highest_assembly":
+            #     scenario_name = "HD"
+            # if scenario_name == "low_assembly":
+            #     scenario_name = "LD"
+            # if scenario_name == "lowest_assembly":
+            #     scenario_name = "LD"
+            # if attr_name == "total_impactMC_with_d_rpc_array" or attr_name == "total_impact_with_d_rpc":
+            #     print_name = "IS"
+            # if attr_name == "total_impactMC_without_d_array":
+            #     print_name = "INS"
+            # if attr_name == "total_impactMC_with_d_standard_array":
+            #     print_name = "ISS"
+            # if attr_name == "impactsMC_b4_array":
+            #     print_name = "B4"
+            # if attr_name == "impacts_a1a3":
+            #     print_name = "A1A3"
+            # if attr_name == "impacts_a4":
+            #     print_name = "A4"
+            # if attr_name == "impacts_b4":
+            #     print_name = "B4"
+            # if attr_name == "impacts_c2":
+            #     print_name = "C2"
+            # if attr_name == "impacts_c3":
+            #     print_name = "C3"
+            # if attr_name == "impacts_c4_sen3":
+            #     print_name = "C4"
+            # if attr_name == "impacts_d_rpc":
+            #     print_name = "D"
+                
+            # if attr == "impactsMC_b4_array":
+            #     print_name = "B4"
+            # if attr == "impactsMC_c2_array":
+            #     print_name = "C2"
+            # if attr == "impactsMC_c3_array":
+            #     print_name = "C3"
+            # if attr == "impactsMC_c4_sen3_array":
+            #     print_name = "C4"
+            # if attr == "impactsMC_d_rpc_array":
+            #     print_name = "D"
+                
+            if other == "None":
+                other = "Median"
+            else:
+                other = other
+                
             if scenario_name == "keep":
-                scenario_name = "ND"
-            if scenario_name == "user input":
-                scenario_name = "RW"
-            if scenario_name == "high_assembly":
                 scenario_name = "HD"
-            if scenario_name == "highest_assembly":
-                scenario_name = "HHD"
-            if scenario_name == "low_assembly":
+            elif scenario_name == "user input":
+                scenario_name = "RW"
+            elif scenario_name == "lowest_product":
                 scenario_name = "LD"
-            if scenario_name == "lowest_assembly":
-                scenario_name = "LLD"
-            if attr_name == "total_impactMC_with_d_rpc_array":
-                print_name = "ISD"
-            if attr_name == "total_impactMC_without_d_array":
-                print_name = "INS"
-            if attr_name == "total_impactMC_with_d_standard_array":
-                print_name = "ISS"
+            else:
+                scenario_name = scenario_name
+                
             if attr_name == "impactsMC_b4_array":
                 print_name = "B4"
-            attr = attr/120/60
-            np.save(os.path.join(path_to_save_folder, f'{constant_sen}_{print_name}_{scenario_name}.npy'), attr)
-            print(f'Saved {attr_name} as {scenario_name}_{print_name}.npy')
+            elif attr_name == "impactsMC_c2_array":
+                print_name = "C2"
+            elif attr_name == "impactsMC_c3_array":
+                print_name = "C3"
+            elif attr_name == "impactsMC_c4_sen3_array":
+                print_name = "C4"
+            elif attr_name == "impactsMC_d_rpc_array":
+                print_name = "D"
+            elif attr_name == "total_impactMC_with_d_rpc_array" or attr_name == "total_impact_with_d_rpc":
+                print_name = "IS"
+            elif attr_name == "total_impactMC_without_d_array":
+                print_name = "INS"
+            else:
+                print_name = attr_name
+                
+            attr = attr/obj.area/obj.life
+            np.save(os.path.join(path_to_save_folder, f'{constant_sen}_{print_name}_{scenario_name}_{other}.npy'), attr)
+            print(f'Saved {attr_name} as {constant_sen}_{scenario_name}_{print_name}_{other}.npy')
         else:
             print(f'The object does not have an attribute named {attr_name}')
 

@@ -75,7 +75,8 @@ def initialize(projectname: str = "default", data_file_path: str = "default", pr
                MCiterations: int = 150, connections_input: bool = True, export_excel: bool = False, mode: str = "keep", default_rel: float = 1, assembly: Assemblies = None, save: bool = True,
                brightway_project_name: str = "circularLCA", brightway_bg_db_name: str = "ecoinvent", brightway_method_name: str = "EN15804", load_static_lca_folder_path: str = None,
                material_flow_mcs: int = 100, save_attribute: tuple[str | list, str, str] = None, constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362),
-               assembly_list: list[Assemblies]=None, mode_assembly: str = None):
+               assembly_list: list[Assemblies]=None, mode_assembly: str = None,
+               tl_mode: str = None):
     bw.projects.set_current(brightway_project_name)
     '''This function initializes the program
     projectname: name of the project it will also be used as the name of the folder where the project will be saved
@@ -113,7 +114,7 @@ def initialize(projectname: str = "default", data_file_path: str = "default", pr
             filename=data_file_path, default_rel=default_rel)
         Analysis.setup_analysis(
             filename=data_file_path, reset_objects=False, update_connection=connections_input, export_excel=export_excel, mode=mode, assemblyMC=assembly, mf_mcs=material_flow_mcs,
-            constants=constants, assembly_list=assembly_list, mode_assembly=mode_assembly)
+            constants=constants, assembly_list=assembly_list, mode_assembly=mode_assembly, tl_mode=tl_mode)
         products_object = Products.instances
         if save:
             save_project(projectname=projectname, save_folder=path_to_save_folder)
@@ -146,6 +147,5 @@ def initialize(projectname: str = "default", data_file_path: str = "default", pr
         if save:
             save_project(projectname=projectname, save_folder=path_to_save_folder)
         if save_attribute:
-            save_attributes_to_numpy(obj=Building.instances[0],attr_names=save_attribute[0],scenario_name=save_attribute[1], constant_sen=save_attribute[2],
-                                    path_to_save_folder=save_attribute[3])
-        
+            save_attributes_to_numpy(obj=Building.instances[0],attr_names=save_attribute[0],scenario_name=save_attribute[1], constant_sen=save_attribute[2], other=save_attribute[3],
+                                    path_to_save_folder=save_attribute[4])

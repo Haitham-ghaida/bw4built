@@ -56,9 +56,9 @@ def mc_por(product, num_simulations=100, constants: tuple = (1.09186399, 0.44315
     for _ in range(num_simulations):
         rand_num = random.random()
         if rand_num < sigmoid_prob:
-            results.append(0)  # Reused
+            results.append(1)  # Reused
         else:
-            results.append(1)  # Not reused
+            results.append(0)  # Not reused
             
     return np.array(results)
 

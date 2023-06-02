@@ -37,13 +37,14 @@ class Analysis:
     def setup_analysis(cls, filename, update_connection: bool = True, reset_objects: bool = False,
                        export_excel: bool = False, mode: str = "user input", assemblyMC: Assemblies = None, 
                        default_rel: float = 1, mf_mcs: int = 100,
-                        constants: tuple = (1.0690464139392881, 0.5333961150019655, -7.57209212334568, -0.030342853955192227),
-                        assembly_list = None, mode_assembly = None):
+                        constants: tuple = (1.09186399, 0.44315069, 7.58473472, -0.07522362),
+                        assembly_list = None, mode_assembly = None,
+                        tl_mode: str = None):
         if reset_objects:
             Analysis.reset()
             Analysis.generate_objects(
                 filename=filename, default_rel=default_rel)
-
+        Products.get_tl(tl_mode=tl_mode)
         Building.connect_to_assemblies()
 
         Products.connect_to_assembly()
@@ -133,9 +134,9 @@ class Analysis:
             else:
                 if use_updated:
                     amount = product.replaced_amount_updated
-                    amount_array = product.replaced_amount_updated_array
                 else:
                     amount = product.replaced_amount
+                amount_array = product.replaced_amount_updated_array
                 # find the material impacts activity
                 material_Act = LCAh.instances[0].activityLib.get(f"{product.id}")
                 if material_Act is None:
@@ -202,7 +203,6 @@ class Analysis:
         for product in Products.instances:
             if use_updated:
                 amount = product.total_amount_with_replacements_updated
-                amount_array = product.total_amount_with_replacements_array_updated
             else:
                 amount = product.total_amount_with_replacements
             # find the c2 activity
@@ -211,6 +211,7 @@ class Analysis:
                 logging.error(
                     f"Could not find c2 activity for {product.id}")
                 continue
+            amount_array = product.total_amount_with_replacements_array_updated
             # look up the c2 activity in the impact library
             impacts_c2_arr = LCAh.instances[0].lcaLib.get(str(c2_Act))
             impactsMC_c2 = LCAh.instances[0].mclcaLib.get(str(c2_Act))
@@ -237,10 +238,11 @@ class Analysis:
             if use_updated:
                 amount = product.total_amount_with_replacements_updated
                 number_of_replacements = product.number_of_replacements_updated
-                amount_array = product.total_amount_with_replacements_array_updated
             else:
                 amount = product.total_amount_with_replacements
                 number_of_replacements = product.number_of_replacements
+            amount_array = product.total_amount_with_replacements_array_updated
+
             # find the c3 activity
             c3_Act = LCAh.instances[0].activityLib.get(f"{product.id}_c3")
             if c3_Act is None:
@@ -293,9 +295,9 @@ class Analysis:
             # use the updated replacement years if use_updated is true
             if use_updated:
                 amount = product.total_amount_with_replacements_updated
-                amount_array = product.total_amount_with_replacements_array_updated
             else:
                 amount = product.total_amount_with_replacements
+            amount_array = product.total_amount_with_replacements_array_updated
             # find the c4 activity
             c4_landfill_Act = LCAh.instances[0].activityLib.get(
                 f"{product.id}_c4")
@@ -373,9 +375,10 @@ class Analysis:
             # use the updated replacement years if use_updated is true
             if use_updated:
                 amount = product.total_amount_with_replacements_updated
-                amount_array = product.total_amount_with_replacements_array_updated
+                
             else:
                 amount = product.total_amount_with_replacements
+            amount_array = product.total_amount_with_replacements_array_updated
             # find the d2 activity
             d2_rep_Act = LCAh.instances[0].activityLib.get(
                 f"{product.id}_d2_rep")
@@ -440,9 +443,9 @@ class Analysis:
             # use the updated replacement years if use_updated is true
             if use_updated:
                 amount = product.total_amount_with_replacements_updated
-                amount_array = product.total_amount_with_replacements_array_updated
             else:
                 amount = product.total_amount_with_replacements
+            amount_array = product.total_amount_with_replacements_array_updated
             #  multiply the heat impact by the amount of the product, the lhv, 0.2 and multiply by -1 to make it negative
             product.impacts_d3_heat = np.multiply(
                 impacts_d3_heat_arr, amount * -1 * 0.2*product.lhv)

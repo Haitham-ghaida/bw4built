@@ -142,6 +142,8 @@ class Assemblies(object):
             return 'Structure'
         if self.type.lower() == 'ceiling element':
             return 'Space Plan'
+        if self.type.lower() == 'flooring element':
+            return 'Space Plan'
         # a list of all possible returns
         # return ['Skin', 'Space Plan', 'Structure', 'Services', 'Skin', 'Structure', 'Services', 'Skin', 'Structure', 'Space Plan']
     @classmethod
@@ -300,6 +302,43 @@ class Products(object):
                                       functional_unit=x[9], recycled_content=x[10], base=x[11], eol_type=x[12],
                                       transport_type=x[13]), df.values.tolist()))
 
+    @classmethod
+    def get_tl(cls, tl_mode: str = None):
+        '''this will get the technicall life of the products'''
+        df_tl = pd.read_excel(f"{PARENT_DIR}/sen/tl.xlsx", sheet_name="Data")
+        # check if table is empty
+        if df_tl.empty:
+            raise Exception("the table for technical life is empty")
+        for product in cls.instances:
+            product.technical_life_tuple = None
+            product.technical_life_dist = None
+            # if product.technical_life is not an int
+            if not isinstance(product.technical_life, int):
+                try:
+                    product.technical_life_tuple = tuple(df_tl[df_tl['Code'] == product.technical_life].loc[:, 'Min':'Max'].values.flatten())
+                except IndexError:
+                    raise IndexError(f"the product {product.id} does not have a technical life sen")
+                product.technical_life_dist = tuple(df_tl[df_tl['Code'] == product.technical_life].loc[:, 'meanlog':'sdlog'].values.flatten())
+                try:
+                    if not tl_mode:
+                        product.technical_life = int(product.technical_life_tuple[3]) # this is the median
+                    elif tl_mode == "Max":
+                        product.technical_life = int(product.technical_life_tuple[6]) # this is the max
+                    elif tl_mode == "Min":
+                        product.technical_life = int(product.technical_life_tuple[0]) # this is the min
+                    elif tl_mode == "D1":
+                        product.technical_life = int(product.technical_life_tuple[1]) # this is the decile 1
+                    elif tl_mode == "Q1":
+                        product.technical_life = int(product.technical_life_tuple[2]) # this is the quartile 1
+                    elif tl_mode == "Q3":
+                        product.technical_life = int(product.technical_life_tuple[4])  # this is the quartile 3
+                    elif tl_mode == "D9":
+                        product.technical_life = int(product.technical_life_tuple[5]) # this is the decile 9
+                except IndexError:
+                    raise IndexError(f"the product {product.id} has something wrong technical life sen here is the tuple {product.technical_life_tuple}")
+            else:
+                pass
+        
     @property
     def number_of_replacements(self) -> int:
         return len(self.years_of_replacements)
@@ -867,42 +906,6 @@ class Relations(object):
                     if relation.ca == np.nan or relation.cr == np.nan or relation.fc == np.nan or relation.is_connection == np.nan:
                         logging.error(
                             f"Relation: {relation.t} is missing a value, check it")
-            if mode == "lowest_assembly":
-                for relation in cls.instances:
-                    if relation.product1object.assembly.id == assembly.id or relation.product2object.assembly.id == assembly.id:
-                        relation.ct = 0.1
-                        relation.ca = 0.1
-                        relation.cr = 0.1
-                        relation.fc = 0.1
-            if mode == "highest_assembly":
-                for relation in cls.instances:
-                    if relation.product1object.assembly.id == assembly.id or relation.product2object.assembly.id == assembly.id:
-                        relation.ct = 1
-                        relation.ca = 1
-                        relation.cr = 1
-                        relation.fc = 1
-            if mode == "low_assembly":
-                for relation in cls.instances:
-                    if relation.product1object.assembly.id == assembly.id or relation.product2object.assembly.id == assembly.id:
-                        relation.ct = random.choice(ct[:2])
-                        relation.ca = random.choice(ca[:2])
-                        relation.cr = random.choice(cr[:2])
-                        relation.fc = random.choice(fc[:2])
-            if mode == "high_assembly":
-                for relation in cls.instances:
-                    if relation.product1object.assembly.id == assembly.id or relation.product2object.assembly.id == assembly.id:
-                        relation.ct = random.choice(ct[3:])
-                        relation.ca = random.choice(ca[3:])
-                        relation.cr = random.choice(cr[2:])
-                        relation.fc = random.choice(fc[3:])
-            if mode == "rng_assembly":
-                for relation in cls.instances:
-                    if relation.product1object.assembly.id == assembly.id or relation.product2object.assembly.id == assembly.id:
-                        relation.ct = random.choice(ct)
-                        relation.ca = random.choice(ca)
-                        relation.cr = random.choice(cr)
-                        relation.fc = random.choice(fc)
-                    
             if mode == "low_product":
                 for relation in cls.instances:
                     relation.ct = random.choice(ct[:2])
@@ -921,6 +924,12 @@ class Relations(object):
                     relation.ca = random.choice(ca)
                     relation.cr = random.choice(cr)
                     relation.fc = random.choice(fc)
+            if mode == "lowest_product":
+                for relation in cls.instances:
+                    relation.ct = 0.1
+                    relation.ca = 0.1
+                    relation.cr = 0.1
+                    relation.fc = 0.1
         cls.relations_add_is_connection(filename)
 
     def mc_for_assemblies(assemblies: list[str], mode: str):
@@ -970,6 +979,11 @@ class Relations(object):
         for relation in cls.instances:
             relation.is_connection = bool(df.loc[df["Relation_id_as_tuple"] == str(
                 relation.t)]["Is_connection"].values[0])
+            if not relation.is_connection:
+                relation.ct = 1
+                relation.ca = 1
+                relation.cr = 1
+                relation.fc = 1
 
 
 class LCAh:
